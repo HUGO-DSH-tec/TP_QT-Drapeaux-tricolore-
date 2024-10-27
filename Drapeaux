@@ -1,0 +1,193 @@
+Voici les étapes détaillées pour créer une application Qt permettant d'apprendre les noms des pays ayant des drapeaux tricolores, et d'afficher ces drapeaux en cliquant sur des boutons.
+
+### Étape 1 : Création du projet
+1. Ouvrez Qt Creator.
+2. Allez dans "Accueil" et sélectionnez "Nouveau projet".
+3. Choisissez "Application → Qt Widgets Application → Choisir...".
+4. Renommez le projet et choisissez son emplacement.
+5. Cliquez sur "Suivant" et sélectionnez "Qmake" comme système de build.
+6. Laissez les informations de "Class Information" par défaut, puis cliquez sur "Suivant".
+7. Sélectionnez le compilateur et cliquez sur "Suivant".
+8. Vérifiez le récapitulatif des fichiers du projet et cliquez sur "Terminer".
+
+### Étape 2 : Fichiers du projet
+Un projet Qt contient les fichiers suivants :
+- **`main.cpp`** : Le fichier source principal qui lance l'application.
+- **`mainwindow.cpp`** : Fichier source contenant la définition de la classe `MainWindow`.
+- **`mainwindow.h`** : Fichier d'en-tête pour la déclaration de la classe `MainWindow`.
+- **`mainwindow.ui`** : Fichier XML représentant les éléments de l'interface utilisateur.
+- **`nom_du_projet.pro`** : Fichier de configuration du projet pour `qmake`.
+
+Voici le code de base pour le fichier `main.cpp` :
+```cpp
+#include "mainwindow.h"
+#include <QApplication>
+
+int main(int argc, char *argv[])
+{
+    QApplication a(argc, argv);
+    MainWindow w;
+    w.show();
+    return a.exec();
+}
+```
+
+### Étape 3 : Création de la classe `Color`
+1. Cliquez droit sur le projet, sélectionnez "Ajouter un nouveau fichier...", puis "C++ → C++ Header File".
+2. Nommez le fichier `Color` et finalisez l'ajout.
+3. Voici le contenu du fichier d'en-tête (`Color.h`) :
+   ```cpp
+   #ifndef COLOR_H
+   #define COLOR_H
+   #include <QWidget>
+
+   class Color : public QWidget
+   {
+       Q_OBJECT
+
+   public:
+       Color(QWidget *parent = nullptr);
+       Color(QString couleur);
+       ~Color();
+   };
+
+   #endif // COLOR_H
+   ```
+
+4. Implémentez le fichier source (`Color.cpp`) :
+   ```cpp
+   #include "Color.h"
+   #include <QPalette>
+
+   Color::Color(QWidget *parent) : QWidget(parent) {}
+
+   Color::Color(QString couleur)
+   {
+       setAutoFillBackground(true);
+       QPalette myPalette = palette();
+       myPalette.setColor(QPalette::Window, QColor(couleur));
+       setPalette(myPalette);
+   }
+
+   Color::~Color() {}
+   ```
+
+### Étape 4 : Création de la classe `Drapeau`
+1. Créez le fichier d'en-tête `Drapeau.h` en suivant le même processus que pour la classe `Color`.
+2. Le contenu de `Drapeau.h` :
+   ```cpp
+   #ifndef DRAPEAU_H
+   #define DRAPEAU_H
+   #include <QWidget>
+   #include <QHBoxLayout>
+   #include <QVBoxLayout>
+
+   class Drapeau : public QWidget
+   {
+       Q_OBJECT
+
+   public:
+       Drapeau(QWidget *parent = nullptr);
+       Drapeau(QString C1, QString C2, QString C3, QString type, QString title);
+       ~Drapeau();
+
+   private:
+       QHBoxLayout *Horiz_layout;
+       QVBoxLayout *Vertic_layout;
+   };
+
+   #endif // DRAPEAU_H
+   ```
+
+3. Implémentez `Drapeau.cpp` :
+   ```cpp
+   #include "Drapeau.h"
+   #include "Color.h"
+
+   Drapeau::Drapeau(QWidget *parent) : QWidget(parent) {}
+
+   Drapeau::Drapeau(QString C1, QString C2, QString C3, QString type, QString title)
+   {
+       Color *Couleur1 = new Color(C1);
+       Color *Couleur2 = new Color(C2);
+       Color *Couleur3 = new Color(C3);
+
+       if (type == "Horizontal")
+       {
+           Horiz_layout = new QHBoxLayout;
+           Horiz_layout->addWidget(Couleur1);
+           Horiz_layout->addWidget(Couleur2);
+           Horiz_layout->addWidget(Couleur3);
+           Horiz_layout->setSpacing(0);
+           setLayout(Horiz_layout);
+       }
+       else if (type == "Vertical")
+       {
+           Vertic_layout = new QVBoxLayout;
+           Vertic_layout->addWidget(Couleur1);
+           Vertic_layout->addWidget(Couleur2);
+           Vertic_layout->addWidget(Couleur3);
+           Vertic_layout->setSpacing(0);
+           setLayout(Vertic_layout);
+       }
+
+       setWindowTitle(title);
+       resize(400, 400);
+   }
+
+   Drapeau::~Drapeau() {}
+   ```
+
+### Étape 5 : Implémentation de `MainWindow`
+1. Mettez à jour `mainwindow.h` :
+   ```cpp
+   #ifndef MAINWINDOW_H
+   #define MAINWINDOW_H
+
+   #include <QMainWindow>
+   #include <QPushButton>
+
+   class MainWindow : public QMainWindow
+   {
+       Q_OBJECT
+
+   public:
+       MainWindow(QWidget *parent = nullptr);
+       ~MainWindow();
+
+   private slots:
+       void afficherDrapeau();
+
+   private:
+       QPushButton *bouton;
+   };
+
+   #endif // MAINWINDOW_H
+   ```
+
+2. Mettez à jour `mainwindow.cpp` :
+   ```cpp
+   #include "mainwindow.h"
+   #include "Drapeau.h"
+
+   MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
+   {
+       bouton = new QPushButton("Afficher le drapeau", this);
+       setCentralWidget(bouton);
+       connect(bouton, &QPushButton::clicked, this, &MainWindow::afficherDrapeau);
+   }
+
+   void MainWindow::afficherDrapeau()
+   {
+       Drapeau *drapeau = new Drapeau("Rouge", "Blanc", "Bleu", "Horizontal", "France");
+       drapeau->show();
+   }
+
+   MainWindow::~MainWindow() {}
+   ```
+
+### Étape 6 : Exécution de l'application
+1. Compilez le projet (Ctrl+B).
+2. Exécutez l'application (Ctrl+R).
+
+Ces étapes vous guideront pour construire une application Qt qui affiche des drapeaux en fonction des interactions avec les boutons.
